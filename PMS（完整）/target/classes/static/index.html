@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>停车场管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .main-title {
+            text-align: center;
+            padding: 2rem 0;
+            color: #2c3e50;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+        }
+
+        .parking-data-container {
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .management-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .nav-button {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            width: 200px;
+        }
+
+        .vehicle-button {
+            background-color: #2ecc71;
+            border-color: #27ae60;
+        }
+
+        .space-button {
+            background-color: #e74c3c;
+            border-color: #c0392b;
+        }
+
+        .table {
+            margin-bottom: 4rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="main-title">停车场管理系统</h1>
+
+    <div class="parking-data-container">
+        <div id="parkingLotsTable">
+            <!-- 停车场数据将在这里动态加载 -->
+        </div>
+        <button class="btn btn-primary management-button" onclick="window.location.href='PMS.html'">
+            停车场管理
+        </button>
+    </div>
+
+    <div class="nav-buttons">
+        <button class="btn vehicle-button nav-button" onclick="window.location.href='vehicle.html'">
+            车辆数据管理
+        </button>
+        <button class="btn space-button nav-button" onclick="window.location.href='parkingspaces.html'">
+            车位数据管理
+        </button>
+    </div>
+</div>
+
+<script>
+    // 页面加载时获取停车场数据
+    window.onload = function() {
+        fetchParkingLots();
+    };
+
+    // 获取停车场数据
+    function fetchParkingLots() {
+        fetch('/api/parking-lots')
+            .then(response => response.json())
+            .then(data => {
+                if (data.length > 0) {
+                    let table = `<table class="table table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>停车场ID</th>
+                                <th>名称</th>
+                                <th>地址</th>
+                                <th>总车位</th>
+                                <th>可用车位</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                    data.forEach(lot => {
+                        table += `
+                            <tr>
+                                <td>${lot.lotId}</td>
+                                <td>${lot.name}</td>
+                                <td>${lot.address}</td>
+                                <td>${lot.totalSpaces}</td>
+                                <td>${lot.availableSpaces}</td>
+                            </tr>`;
+                    });
+
+                    table += `</tbody></table>`;
+                    document.getElementById('parkingLotsTable').innerHTML = table;
+                } else {
+                    document.getElementById('parkingLotsTable').innerHTML = '<p class="text-center">暂无停车场信息。</p>';
+                }
+            })
+            .catch(error => {
+                document.getElementById('parkingLotsTable').innerHTML =
+                    '<p class="text-center text-danger">获取停车场信息失败，请稍后再试。</p>';
+            });
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>停车位管理系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .function-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .function-tabs {
+            background: #f8f9fa;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .function-tab {
+            border: none;
+            background: none;
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .function-tab.active {
+            background: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        .function-content {
+            padding: 20px;
+            display: none;
+        }
+
+        .function-content.active {
+            display: block;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        table {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <nav class="navbar navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-arrow-left"></i> 返回主页
+            </a>
+        </div>
+    </nav>
+
+    <h1 class="text-center my-4">停车位管理</h1>
+
+    <div class="function-container">
+        <div class="function-tabs">
+            <button class="function-tab active" onclick="showFunction('list')">停车位列表</button>
+            <button class="function-tab" onclick="showFunction('create')">创建停车位</button>
+            <button class="function-tab" onclick="showFunction('search')">查询停车位</button>
+            <button class="function-tab" onclick="showFunction('update')">更新停车位</button>
+        </div>
+
+        <!-- 停车位列表 -->
+        <div id="listFunction" class="function-content active">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>车位ID</th>
+                    <th>车位类型</th>
+                    <th>占用状态</th>
+                    <th>停车场ID</th>
+                </tr>
+                </thead>
+                <tbody id="parkingSpacesTableBody">
+                <!-- 动态填充数据 -->
+                </tbody>
+            </table>
+            <nav aria-label="停车位列表分页">
+                <ul class="pagination" id="parkingSpacesPagination">
+                    <!-- 分页控件 -->
+                </ul>
+            </nav>
+        </div>
+
+        <!-- 创建停车位 -->
+        <div id="createFunction" class="function-content">
+            <form id="addParkingForm">
+                <div class="mb-3">
+                    <label for="spaceType" class="form-label">车位类型</label>
+                    <input type="text" class="form-control" id="spaceType" required>
+                </div>
+                <div class="mb-3">
+                    <label for="occupied" class="form-label">占用状态</label>
+                    <select class="form-control" id="occupied" required>
+                        <option value="0">空闲</option>
+                        <option value="1">占用</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="lotId" class="form-label">停车场ID</label>
+                    <input type="number" class="form-control" id="lotId" required>
+                </div>
+                <button type="submit" class="btn btn-primary">创建停车位</button>
+            </form>
+        </div>
+
+        <!-- 查询停车位 -->
+        <div id="searchFunction" class="function-content">
+            <form id="getParkingForm">
+                <div class="mb-3">
+                    <label for="searchSpaceId" class="form-label">车位ID</label>
+                    <input type="number" class="form-control" id="searchSpaceId" required>
+                </div>
+                <button type="submit" class="btn btn-primary">查询</button>
+            </form>
+            <div id="parkingSpaceDetails" class="mt-3">
+                <!-- 查询结果显示区域 -->
+            </div>
+        </div>
+
+        <!-- 更新停车位 -->
+        <div id="updateFunction" class="function-content">
+            <form id="updateParkingForm">
+                <div class="mb-3">
+                    <label for="updateSpaceId" class="form-label">车位ID</label>
+                    <input type="number" class="form-control" id="updateSpaceId" required>
+                </div>
+                <div class="mb-3">
+                    <label for="updateSpaceType" class="form-label">车位类型</label>
+                    <input type="text" class="form-control" id="updateSpaceType" required>
+                </div>
+                <div class="mb-3">
+                    <label for="updateOccupied" class="form-label">占用状态</label>
+                    <select class="form-control" id="updateOccupied" required>
+                        <option value="0">空闲</option>
+                        <option value="1">占用</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">更新</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 显示指定功能区域
+    function showFunction(functionName) {
+        // 隐藏所有功能区域
+        document.querySelectorAll('.function-content').forEach(content => {
+            content.classList.remove('active');
+        });
+
+        // 取消所有标签页的激活状态
+        document.querySelectorAll('.function-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+
+        // 显示选中的功能区域
+        document.getElementById(functionName + 'Function').classList.add('active');
+
+        // 激活对应的标签页
+        event.currentTarget.classList.add('active');
+
+        // 如果是列表功能，则加载第一页数据
+        if (functionName === 'list') {
+            loadParkingSpaces(1);
+        }
+    }
+
+    // 加载停车位列表数据
+    function loadParkingSpaces(page) {
+        fetch('/api/parking-spaces')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('parkingSpacesTableBody');
+                tbody.innerHTML = '';
+
+                data.forEach(space => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${space.spaceId}</td>
+                        <td>${space.spaceType}</td>
+                        <td>${space.occupied === 0 ? '空闲' : '占用'}</td>
+                        <td>${space.lotId}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error loading parking spaces:', error));
+    }
+
+    // 页面加载时显示停车位列表
+    document.addEventListener('DOMContentLoaded', () => {
+        loadParkingSpaces(1);
+
+        // 绑定表单提交事件
+        document.getElementById('addParkingForm').addEventListener('submit', handleCreate);
+        document.getElementById('getParkingForm').addEventListener('submit', handleSearch);
+        document.getElementById('updateParkingForm').addEventListener('submit', handleUpdate);
+    });
+
+    // 处理创建停车位
+    function handleCreate(event) {
+        event.preventDefault();
+        const spaceType = document.getElementById('spaceType').value;
+        const occupied = document.getElementById('occupied').value;
+        const lotId = document.getElementById('lotId').value;
+
+        fetch('/api/parking-spaces', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                spaceType: spaceType,
+                occupied: parseInt(occupied),
+                lotId: lotId
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert('停车位创建成功！');
+                loadParkingSpaces(1);
+            })
+            .catch(error => {
+                alert('创建失败，请稍后再试');
+                console.error('Error:', error);
+            });
+    }
+
+    // 处理查询停车位
+    function handleSearch(event) {
+        event.preventDefault();
+        const spaceId = document.getElementById('searchSpaceId').value;
+
+        fetch(`/api/parking-spaces/${spaceId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.parkingSpace) {
+                    const space = data.parkingSpace;
+                    document.getElementById('parkingSpaceDetails').innerHTML = `
+                        <div class="alert alert-info">
+                            <h4>车位信息</h4>
+                            <p>车位ID：${space.spaceId}</p>
+                            <p>车位类型：${space.spaceType}</p>
+                            <p>占用状态：${space.occupied === 0 ? '空闲' : '占用'}</p>
+                            <p>停车场ID：${space.lotId}</p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('parkingSpaceDetails').innerHTML =
+                        '<div class="alert alert-warning">未找到该车位信息</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('parkingSpaceDetails').innerHTML =
+                    '<div class="alert alert-danger">查询失败，请稍后再试</div>';
+            });
+    }
+
+    // 处理更新停车位
+    function handleUpdate(event) {
+        event.preventDefault();
+        const spaceId = document.getElementById('updateSpaceId').value;
+        const spaceType = document.getElementById('updateSpaceType').value;
+        const occupied = document.getElementById('updateOccupied').value;
+
+        // 检查车位是否为空闲
+        if (occupied !== '0') {
+            alert('只能更新空闲状态的车位！');
+            return;
+        }
+
+        fetch(`/api/parking-spaces/${spaceId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                spaceId: spaceId,
+                spaceType: spaceType,
+                occupied: parseInt(occupied)
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert('停车位更新成功！');
+                loadParkingSpaces(1);
+            })
+            .catch(error => {
+                alert('更新失败，请稍后再试');
+                console.error('Error:', error);
+            });
+    }
+</script>
